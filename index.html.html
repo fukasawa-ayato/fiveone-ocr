@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIVEONE / Members Registration</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&family=Montserrat:wght@300;400;600&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #1a1a1a;
+    --white: #ffffff;
+    --gray-light: #f5f5f5;
+    --gray-mid: #e0e0e0;
+    --gray-text: #888;
+    --accent: #c8a96e;
+    --error: #c0392b;
+    --success: #27ae60;
+  }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--gray-light);
+    color: var(--black);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--black);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  header h1 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+    font-size: 18px;
+    letter-spacing: 0.15em;
+    color: var(--white);
+  }
+
+  header span {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+
+  .card {
+    background: var(--white);
+    border: 1px solid var(--gray-mid);
+    padding: 36px;
+    margin-bottom: 24px;
+  }
+
+  .card-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gray-text);
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--gray-mid);
+  }
+
+  /* Upload area */
+  .upload-area {
+    border: 1.5px dashed var(--gray-mid);
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+
+  .upload-area:hover {
+    border-color: var(--accent);
+    background: #fdfaf5;
+  }
+
+  .upload-area.dragover {
+    border-color: var(--accent);
+    background: #fdfaf5;
+  }
+
+  .upload-area input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .upload-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    color: var(--gray-text);
+  }
+
+  .upload-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--black);
+    margin-bottom: 6px;
+  }
+
+  .upload-sub {
+    font-size: 12px;
+    color: var(--gray-text);
+  }
+
+  /* Preview */
+  #preview-wrap {
+    display: none;
+    margin-top: 20px;
+    text-align: center;
+  }
+
+  #preview-img {
+    max-width: 100%;
+    max-height: 320px;
+    border: 1px solid var(--gray-mid);
+  }
+
+  /* OCR button */
+  .btn-primary {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border: none;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background 0.2s;
+  }
+
+  .btn-primary:hover { background: #333; }
+  .btn-primary:disabled { background: var(--gray-mid); cursor: not-allowed; color: var(--gray-text); }
+
+  .btn-secondary {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background: var(--white);
+    color: var(--black);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border: 1.5px solid var(--black);
+    cursor: pointer;
+    margin-top: 12px;
+    transition: background 0.2s;
+  }
+
+  .btn-secondary:hover { background: var(--gray-light); }
+
+  /* Status */
+  #status {
+    display: none;
+    padding: 12px 16px;
+    font-size: 13px;
+    margin-top: 16px;
+  }
+
+  #status.loading { background: #fdfaf5; border-left: 3px solid var(--accent); color: var(--black); }
+  #status.error { background: #fdf0ee; border-left: 3px solid var(--error); color: var(--error); }
+  #status.success { background: #edfaf3; border-left: 3px solid var(--success); color: var(--success); }
+
+  /* Form */
+  #result-section { display: none; }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .form-row.full { grid-template-columns: 1fr; }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+  .form-group label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--gray-text);
+    text-transform: uppercase;
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  .form-group input {
+    padding: 10px 12px;
+    border: 1px solid var(--gray-mid);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 14px;
+    color: var(--black);
+    background: var(--white);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-group input:focus { border-color: var(--accent); }
+
+  /* Save status */
+  #save-status {
+    display: none;
+    padding: 12px 16px;
+    font-size: 13px;
+    margin-top: 12px;
+  }
+
+  #save-status.success { background: #edfaf3; border-left: 3px solid var(--success); color: var(--success); }
+  #save-status.error { background: #fdf0ee; border-left: 3px solid var(--error); color: var(--error); }
+
+  .divider {
+    height: 1px;
+    background: var(--gray-mid);
+    margin: 24px 0;
+  }
+
+  .reset-link {
+    font-size: 12px;
+    color: var(--gray-text);
+    text-decoration: underline;
+    cursor: pointer;
+    text-align: center;
+    display: block;
+    margin-top: 16px;
+    font-family: 'Montserrat', sans-serif;
+    letter-spacing: 0.05em;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--accent);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>FIVEONE</h1>
+    <span>Members Registration</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <div class="card-title">Step 1 — Upload Sheet</div>
+
+    <div class="upload-area" id="upload-area">
+      <input type="file" id="file-input" accept="image/*">
+      <div class="upload-icon">📄</div>
+      <div class="upload-label">Members Club Sheetをアップロード</div>
+      <div class="upload-sub">クリックまたはドラッグ＆ドロップ</div>
+    </div>
+
+    <div style="text-align:center; margin-top:16px; color:var(--gray-text); font-size:12px; font-family:'Montserrat',sans-serif; letter-spacing:0.1em;">— または —</div>
+
+    <button class="btn-secondary" id="camera-btn">📷 カメラで撮影</button>
+
+    <!-- Camera modal -->
+    <div id="camera-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; flex-direction:column; align-items:center; justify-content:center;">
+      <video id="camera-video" autoplay playsinline style="max-width:90vw; max-height:60vh; border:1px solid #444;"></video>
+      <div style="margin-top:20px; display:flex; gap:16px;">
+        <button id="capture-btn" style="padding:12px 32px; background:var(--accent); color:var(--black); border:none; cursor:pointer; font-family:'Montserrat',sans-serif; font-size:12px; font-weight:600; letter-spacing:0.15em;">撮影する</button>
+        <button id="close-camera-btn" style="padding:12px 32px; background:transparent; color:var(--white); border:1px solid #666; cursor:pointer; font-family:'Montserrat',sans-serif; font-size:12px; letter-spacing:0.15em;">閉じる</button>
+      </div>
+    </div>
+    <canvas id="camera-canvas" style="display:none;"></canvas>
+
+    <div id="preview-wrap">
+      <img id="preview-img" src="" alt="preview">
+    </div>
+
+    <div id="status"></div>
+
+    <button class="btn-primary" id="ocr-btn" disabled>読み取る</button>
+  </div>
+
+  <div class="card" id="result-section">
+    <div class="card-title">Step 2 — 内容を確認・修正</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>姓</label>
+        <input type="text" id="f-last" placeholder="山田">
+      </div>
+      <div class="form-group">
+        <label>名</label>
+        <input type="text" id="f-first" placeholder="太郎">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>フリガナ（姓）</label>
+        <input type="text" id="f-last-kana" placeholder="ヤマダ">
+      </div>
+      <div class="form-group">
+        <label>フリガナ（名）</label>
+        <input type="text" id="f-first-kana" placeholder="タロウ">
+      </div>
+    </div>
+
+    <div class="form-row full">
+      <div class="form-group">
+        <label>住所</label>
+        <input type="text" id="f-address" placeholder="東京都中央区銀座1-1-1">
+      </div>
+    </div>
+
+    <div class="form-row full">
+      <div class="form-group">
+        <label>電話番号</label>
+        <input type="text" id="f-tel" placeholder="090-1234-5678">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <button class="btn-primary" id="save-btn">スプレッドシートに登録</button>
+    <div id="save-status"></div>
+    <a class="reset-link" id="reset-link">別の用紙を読み取る</a>
+  </div>
+
+</div>
+
+<script>
+  const VISION_API_KEY = 'AIzaSyBeE__NqJm_ZNQ4q0xktx6Qb2NnkOofY30';
+  const SHEET_ID = '1J3SlKZoh3fC71nvqgNAH-l51154fJczErYJcMfVe0AI';
+
+  let base64Image = '';
+
+  const fileInput = document.getElementById('file-input');
+  const uploadArea = document.getElementById('upload-area');
+  const previewWrap = document.getElementById('preview-wrap');
+  const previewImg = document.getElementById('preview-img');
+  const ocrBtn = document.getElementById('ocr-btn');
+  const statusEl = document.getElementById('status');
+  const resultSection = document.getElementById('result-section');
+  const saveBtn = document.getElementById('save-btn');
+  const saveStatus = document.getElementById('save-status');
+  const resetLink = document.getElementById('reset-link');
+
+  // Camera
+  const cameraBtn = document.getElementById('camera-btn');
+  const cameraModal = document.getElementById('camera-modal');
+  const cameraVideo = document.getElementById('camera-video');
+  const captureBtn = document.getElementById('capture-btn');
+  const closeCameraBtn = document.getElementById('close-camera-btn');
+  const cameraCanvas = document.getElementById('camera-canvas');
+  let stream = null;
+
+  cameraBtn.addEventListener('click', async () => {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      cameraVideo.srcObject = stream;
+      cameraModal.style.display = 'flex';
+    } catch (err) {
+      alert('カメラにアクセスできませんでした：' + err.message);
+    }
+  });
+
+  captureBtn.addEventListener('click', () => {
+    cameraCanvas.width = cameraVideo.videoWidth;
+    cameraCanvas.height = cameraVideo.videoHeight;
+    cameraCanvas.getContext('2d').drawImage(cameraVideo, 0, 0);
+    cameraCanvas.toBlob(blob => {
+      handleFile(blob);
+      stopCamera();
+    }, 'image/jpeg', 0.95);
+  });
+
+  closeCameraBtn.addEventListener('click', stopCamera);
+
+  function stopCamera() {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    cameraModal.style.display = 'none';
+  }
+
+  // Drag & drop
+  uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+  uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+  uploadArea.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+  });
+
+  function handleFile(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const dataUrl = e.target.result;
+      base64Image = dataUrl.split(',')[1];
+      previewImg.src = dataUrl;
+      previewWrap.style.display = 'block';
+      ocrBtn.disabled = false;
+      hideStatus();
+      resultSection.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  ocrBtn.addEventListener('click', runOCR);
+
+  async function runOCR() {
+    if (!base64Image) return;
+    ocrBtn.disabled = true;
+    showStatus('loading', '<span class="spinner"></span>読み取り中...');
+
+    try {
+      const res = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${VISION_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requests: [{
+            image: { content: base64Image },
+            features: [{ type: 'DOCUMENT_TEXT_DETECTION' }]
+          }]
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.error) throw new Error(data.error.message);
+
+      const text = data.responses[0]?.fullTextAnnotation?.text || '';
+      if (!text) throw new Error('テキストが読み取れませんでした');
+
+      // Debug: show raw text
+      let debugEl = document.getElementById('debug-raw');
+      if (!debugEl) {
+        debugEl = document.createElement('div');
+        debugEl.id = 'debug-raw';
+        debugEl.style.cssText = 'margin-top:16px;padding:12px;background:#f0f0f0;border:1px solid #ccc;font-size:11px;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;font-family:monospace;';
+        ocrBtn.parentNode.insertBefore(debugEl, ocrBtn.nextSibling);
+      }
+      debugEl.textContent = '--- RAW OCR TEXT ---\n' + text;
+
+      parseAndFill(text);
+      showStatus('success', '✓ 読み取り完了。内容を確認・修正してください。');
+      resultSection.style.display = 'block';
+      resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    } catch (err) {
+      showStatus('error', '⚠ エラー：' + err.message);
+      ocrBtn.disabled = false;
+    }
+  }
+
+  function parseAndFill(text) {
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+    // Helper: find line after keyword
+    function after(keyword) {
+      const idx = lines.findIndex(l => l.includes(keyword));
+      if (idx === -1) return '';
+      return lines[idx + 1] || '';
+    }
+
+    function lineContaining(keyword) {
+      return lines.find(l => l.includes(keyword)) || '';
+    }
+
+    // Name: look for 様 marker
+    const sameLine = lines.find(l => l.includes('様'));
+    let fullName = '';
+    if (sameLine) {
+      fullName = sameLine.replace('様', '').trim();
+    }
+
+    // Furigana: typically appears before name block
+    const furiganaLine = lines.find(l => /^[ァ-ヶー\s]+$/.test(l) && l.length > 1) || '';
+
+    // Split name into last/first (simple: first character group)
+    const nameParts = fullName.split(/[\s　]+/);
+    document.getElementById('f-last').value = nameParts[0] || '';
+    document.getElementById('f-first').value = nameParts[1] || '';
+
+    const kanaParts = furiganaLine.split(/[\s　]+/);
+    document.getElementById('f-last-kana').value = kanaParts[0] || '';
+    document.getElementById('f-first-kana').value = kanaParts[1] || '';
+
+    // Address: line with 〒 or after 住所
+    const addressLine = lines.find(l => l.startsWith('〒') || l.match(/^\d{3}-\d{4}/)) || '';
+    const addressIdx = lines.indexOf(addressLine);
+    let address = '';
+    if (addressIdx !== -1) {
+      // combine zip line + next line
+      address = lines[addressIdx].replace(/^〒\s*/, '') + ' ' + (lines[addressIdx + 1] || '');
+      address = address.trim();
+    }
+    document.getElementById('f-address').value = address;
+
+    // TEL: line after TEL keyword or matching phone pattern
+    const telLine = lines.find(l => /\d{2,4}[-−‐]\d{2,4}[-−‐]\d{3,4}/.test(l)) || '';
+    document.getElementById('f-tel').value = telLine.replace(/[^0-9\-]/g, '') || '';
+  }
+
+  // Save to Google Sheets via Apps Script Web App
+  // Since we can't use Sheets API directly from browser without OAuth,
+  // we use a simple approach: copy-ready display + direct Sheets API with API key
+  // Note: Sheets write requires OAuth. We'll use a public Apps Script endpoint approach.
+  // For now, save opens a pre-filled Google Form or uses Apps Script deployed as web app.
+
+  saveBtn.addEventListener('click', saveToSheet);
+
+  async function saveToSheet() {
+    const last = document.getElementById('f-last').value.trim();
+    const first = document.getElementById('f-first').value.trim();
+    if (!last && !first) {
+      showSaveStatus('error', '⚠ 氏名を入力してください');
+      return;
+    }
+
+    saveBtn.disabled = true;
+    showSaveStatus('loading', '<span class="spinner"></span>登録中...');
+
+    const row = [
+      new Date().toLocaleString('ja-JP'),
+      last,
+      first,
+      document.getElementById('f-last-kana').value.trim(),
+      document.getElementById('f-first-kana').value.trim(),
+      document.getElementById('f-address').value.trim(),
+      document.getElementById('f-tel').value.trim()
+    ];
+
+    // Use Google Sheets API with API key (append row)
+    // Sheets API write requires OAuth token, not just API key.
+    // We'll use a deployed Apps Script Web App as the backend.
+    // For setup, user needs to deploy an Apps Script. Show instructions if not set up.
+
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxYtuB9PlsQG7fkxqvEoeJ45u55HZKVO85zu9j6YeDs-26-TYfaXfQdQ70V4oAbwlM2MQ/exec';
+
+    try {
+      await fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ row })
+      });
+
+      showSaveStatus('success', '✓ スプレッドシートに登録しました');
+      saveBtn.disabled = false;
+
+    } catch (err) {
+      showSaveStatus('error', '⚠ 登録に失敗しました：' + err.message);
+      saveBtn.disabled = false;
+    }
+  }
+
+
+
+  resetLink.addEventListener('click', () => {
+    base64Image = '';
+    fileInput.value = '';
+    previewWrap.style.display = 'none';
+    ocrBtn.disabled = true;
+    hideStatus();
+    resultSection.style.display = 'none';
+    saveStatus.style.display = 'none';
+    ['f-last','f-first','f-last-kana','f-first-kana','f-address','f-tel'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  function showStatus(type, msg) {
+    statusEl.className = type;
+    statusEl.innerHTML = msg;
+    statusEl.style.display = 'block';
+  }
+
+  function hideStatus() {
+    statusEl.style.display = 'none';
+  }
+
+  function showSaveStatus(type, msg) {
+    saveStatus.className = type;
+    saveStatus.innerHTML = msg;
+    saveStatus.style.display = 'block';
+  }
+</script>
+</body>
+</html>
